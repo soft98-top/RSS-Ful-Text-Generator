@@ -1,2 +1,5 @@
-# RSS-Ful-Text-Generator
-根据规则生成 rss 文档
+# RSS-Generator
+## 概述
+根据规则生成 rss 导览或者 rss 全文本文档
+## 原理
+配置规则，遍历抓取目标网站内容，根据 rss 规范生成 rss 订阅（本地文件存储/数据库）
