@@ -1,8 +1,14 @@
 import flask
 import argparse
 from web2rss import *
+import json
 app = flask.Flask(__name__)
 
+@app.route('/xianzhi')
+def xianzhi():
+    # 返回 RSS xml 文件
+    with open("xianzhi.xml","r",encoding="utf-8") as f:
+        return f.read()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
