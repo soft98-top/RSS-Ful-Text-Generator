@@ -4,43 +4,31 @@ from rss_handler import *
 # 导入 html 标签处理库
 import html
 import time
+from dateutil import parser
 
-HANDLE_RULE = {
-    "xianzhi":{
-        "title": "先知社区",
-        "link": "https://paper.seebug.org/",
-        "description": "先知社区",
-        "capture": {
-            "title": {"tag": "h1", "class": "post-title"},
-            "description": {"tag": "section", "class": "post-content"},
-            "pubDate": {"tag": "time", "class": "fulldate"}
-        }
-    }
-}
 
-def genrate_rss_by_html(urls,rule_id):
-    if HANDLE_RULE.get(rule_id) is None:
+def genrate_rss_by_html(urls,handle_config):
+    if handle_config is None:
         return None
-    title = HANDLE_RULE[rule_id].get("title")
+    title = handle_config.get("title")
     if title is None:
         title = "RSS-Full-Text-Generator"
-    link = HANDLE_RULE[rule_id].get("link")
+    link = handle_config.get("link")
     if link is None:
         link = "https://www.soft98.top/"
-    description = HANDLE_RULE[rule_id].get("description")
+    description = handle_config.get("description")
     if description is None:
         description = "RSS-Full-Text-Generator"
     items = []
     for url in urls:
-        item = handle_html(url,rule_id)
+        item = handle_html(url,handle_config.get('capture'))
         items.append(item)
     return getRSSContent(title, link, description, items)
 
-def handle_html(url,rule_id):
+def handle_html(url,capture):
     web_html = getHTMLText(url)
     # print(web_html)
     soup = BeautifulSoup(web_html, "html.parser")
-    capture = HANDLE_RULE[rule_id]["capture"]
     if capture is None:
         return None
     title = capture_html(capture, "title", soup)
@@ -58,7 +46,15 @@ def handle_html(url,rule_id):
         pubDate = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime())
     else:
         # 2023年08月25日转换为Fri, 25 Aug 2023 05:40:00 +0000 格式，先转换为时间戳，再转换为时间格式
-        pubDate = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.strptime(pubDate, "%Y年%m月%d日"))
+        try:
+            pubDate_obj = parser.parse(pubDate)
+            pubDate_obj = pubDate_obj.timetuple()
+        except:
+            try:
+                pubDate_obj = time.strptime(pubDate, "%Y年%m月%d日")
+            except:
+                pubDate_obj = time.localtime()
+        pubDate = time.strftime("%a, %d %b %Y %H:%M:%S +0000", pubDate_obj)
     # print(pubDate)
     item = {
         "title": title,
@@ -69,7 +65,7 @@ def handle_html(url,rule_id):
     }
     return item
 
-def capture_html(capture, flag, soup, type="str"):
+def capture_html(capture, flag, soup, type="str", index=0):
     if capture.get(flag) is None:
         return None
     # 解析 capture，根据设置的内容抓取规则
@@ -81,7 +77,13 @@ def capture_html(capture, flag, soup, type="str"):
         if key == "tag":
             continue
         attrs[key] = capture[flag][key]
-    content = soup.find(tag, attrs=attrs)
+    if capture[flag].get("_index") is not None:
+        index = int(capture[flag]["_index"])
+    content = soup.find_all(tag, attrs)
+    if len(content) > 0:
+        if index >= len(content):
+            index = 0
+        content = content[index]
     if content is not None:
         if type == "str":
             return content.string
@@ -92,22 +94,18 @@ def capture_html(capture, flag, soup, type="str"):
     else:
         return None
 
-def genrate_rss_by_json(urls,rule_id):
-    if HANDLE_RULE.get(rule_id) is None:
+def genrate_rss_by_json(handle_config,items):
+    if handle_config is None:
         return None
-    title = HANDLE_RULE[rule_id].get("title")
+    title = handle_config.get("title")
     if title is None:
         title = "RSS-Full-Text-Generator"
-    link = HANDLE_RULE[rule_id].get("link")
+    link = handle_config.get("link")
     if link is None:
         link = "https://www.soft98.top/"
-    description = HANDLE_RULE[rule_id].get("description")
+    description = handle_config.get("description")
     if description is None:
         description = "RSS-Full-Text-Generator"
-    items = []
-    for url in urls:
-        item = handle_json(url,rule_id)
-        items.append(item)
     return getRSSContent(title, link, description, items)
 
 def handle_json(url,rule_id):
