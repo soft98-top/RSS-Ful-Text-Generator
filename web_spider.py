@@ -1,4 +1,5 @@
 import requests
+
 HTTP_CONFIG = {
     "timeout": 30,
     "headers": {

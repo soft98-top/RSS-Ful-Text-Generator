@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSS-GENERATOR</title>
+</head>
+<body>
+    <h1>RSS-GENERATOR</h1>
+    <p>Generate RSS feeds from any website</p>
+    <form action="/submit" method="post">
+        <input type="text" name="url" placeholder="Enter URL">
+        <input type="submit" value="Generate RSS">
+    </form>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(function(){
+            $('form').submit(function(e){
+                e.preventDefault();
+                var url = $('input[name="url"]').val();
+                $.ajax({
+                    url: '/submit',
+                    method: 'post',
+                    data: {url: url},
+                    success: function(data){
+                        console.log(data);
+                        if(data.status == 'success'){
+                            window.location.href = '/rss/' + data.id;
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
